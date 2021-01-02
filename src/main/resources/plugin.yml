@@ -1,0 +1,13 @@
+name: SignEdit
+version: ${project.version}
+main: at.haha.signedit.SignEdit
+api-version: 1.16
+authors: [Haha]
+description: Sign Editor
+commands:
+  sign:
+    description: sign editor command
+    usage: /<command> <args>
+    permission: signedit.sign.command
+    permission-message: §cDu hast keine ausreichenden Rechte um diesen Command zu benutzen.
+    default: op
