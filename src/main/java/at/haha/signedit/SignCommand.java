@@ -145,7 +145,7 @@ public class SignCommand implements CommandExecutor, Listener {
 		sign.setEditable(false);
 		SignChangeEvent signEvent = new SignChangeEvent(event.getBlock(), player, lines);
 		Bukkit.getServer().getPluginManager().callEvent(signEvent);
-		if (event.isCancelled()) return;
+		if (signEvent.isCancelled()) return;
 		for (int i = 0; i < lines.length; i++) {
 			sign.setLine(i, lines[i]);
 		}
