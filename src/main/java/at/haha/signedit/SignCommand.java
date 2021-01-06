@@ -164,7 +164,6 @@ public class SignCommand implements CommandExecutor, Listener {
 	void onPlayerQuit(PlayerQuitEvent event) {
 		enabledPlayers.remove(event.getPlayer());
 		signs.remove(event.getPlayer());
-		onDisable(event.getPlayer());
 	}
 
 
