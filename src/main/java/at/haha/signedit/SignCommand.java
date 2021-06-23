@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
 import org.bukkit.Bukkit;
 import org.bukkit.Tag;
 import org.bukkit.block.Sign;
@@ -184,23 +185,20 @@ public class SignCommand implements CommandExecutor, Listener {
 
     @SneakyThrows
     private Channel getChannel(Player player) {
-        //maybe we have to change to obfuscated code:
-        //  return player.getHandle().b.a.k;
         Object nmsPlayer = player.getClass().getDeclaredMethod("getHandle").invoke(player);
-        Object playerConnection = nmsPlayer.getClass().getDeclaredField("playerConnection").get(nmsPlayer);
-        Object networkManager = playerConnection.getClass().getDeclaredField("networkManager").get(playerConnection);
-        return (Channel) networkManager.getClass().getDeclaredField("channel").get(networkManager);
+        Object playerConnection = nmsPlayer.getClass().getDeclaredField("b").get(nmsPlayer);
+        Object networkManager = playerConnection.getClass().getDeclaredField("a").get(playerConnection);
+        return (Channel) networkManager.getClass().getDeclaredField("k").get(networkManager);
     }
 
 
     private static class SignPacketRemover extends ChannelDuplexHandler {
-        private static final String nmsPackage = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
         private static final Class<?> packetPlayOutSignGui;
 
         static {
             Class<?> tempPacketClass;
             try {
-                tempPacketClass = Class.forName(nmsPackage + ".PacketPlayOutOpenSignEditor");
+                tempPacketClass = Class.forName("net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 tempPacketClass = null;
