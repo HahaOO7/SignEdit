@@ -7,6 +7,7 @@ import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
+import net.minecraft.server.level.EntityPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Tag;
 import org.bukkit.block.Sign;
@@ -185,29 +186,14 @@ public class SignCommand implements CommandExecutor, Listener {
 
     @SneakyThrows
     private Channel getChannel(Player player) {
-        Object nmsPlayer = player.getClass().getDeclaredMethod("getHandle").invoke(player);
-        Object playerConnection = nmsPlayer.getClass().getDeclaredField("b").get(nmsPlayer);
-        Object networkManager = playerConnection.getClass().getDeclaredField("a").get(playerConnection);
-        return (Channel) networkManager.getClass().getDeclaredField("k").get(networkManager);
+        EntityPlayer nmsPlayer = (EntityPlayer) player.getClass().getDeclaredMethod("getHandle").invoke(player);
+        return nmsPlayer.b.a.k;
     }
 
 
     private static class SignPacketRemover extends ChannelDuplexHandler {
-        private static final Class<?> packetPlayOutSignGui;
-
-        static {
-            Class<?> tempPacketClass;
-            try {
-                tempPacketClass = Class.forName("net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor");
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                tempPacketClass = null;
-            }
-            packetPlayOutSignGui = tempPacketClass;
-        }
-
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-            if (msg.getClass() == packetPlayOutSignGui) return;
+            if (msg instanceof PacketPlayOutOpenSignEditor) return;
             super.write(ctx, msg, promise);
         }
     }
