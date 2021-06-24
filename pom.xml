@@ -13,7 +13,7 @@
 
     <description>Sign Editor</description>
     <properties>
-        <java.version>11</java.version>
+        <java.version>16</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mcVersion>1.17-R0.1-SNAPSHOT</mcVersion>
     </properties>
@@ -31,8 +31,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
             <version>${mcVersion}</version>
             <scope>provided</scope>
         </dependency>
