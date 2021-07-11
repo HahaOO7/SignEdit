@@ -5,6 +5,8 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
 import net.minecraft.server.level.EntityPlayer;
@@ -29,17 +31,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SignCommand implements CommandExecutor, Listener {
-
-    private final Pattern hexColorPattern = Pattern.compile("&[#xX][0-9a-fA-F]{6}");
-    private final Pattern removePattern = Pattern.compile("(&[0-9a-fk-rA-FK-R])|(&[#xX][0-9a-fA-F]{6})");
+    private static final LegacyComponentSerializer serializer = LegacyComponentSerializer.legacyAmpersand();
+    private static final Pattern removePattern = Pattern.compile("(&[0-9a-fk-rA-FK-R])|(&#[0-9a-fA-F]{6})");
 
     private final Set<Player> enabledPlayers = new HashSet<>();
-    private final Hashtable<String, String> messages = new Hashtable<>();
-    private final Hashtable<Player, String[]> signs = new Hashtable<>();
+    private final HashMap<String, String> messages = new HashMap<>();
+    private final HashMap<Player, Component[]> signs = new HashMap<>();
 
 
     //sign -> toggles enabled
@@ -63,12 +63,10 @@ public class SignCommand implements CommandExecutor, Listener {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(ChatColor.RED + "This command can only be executed by players!");
             return true;
         }
-
-        Player player = (Player) sender;
 
 
         if (args.length == 0) {
@@ -108,17 +106,15 @@ public class SignCommand implements CommandExecutor, Listener {
             return true;
         }
 
-        String[] sign = signs.get(player);
+        Component[] sign = signs.get(player);
         if (sign == null) {
-            sign = new String[4];
-            Arrays.fill(sign, "");
+            sign = new Component[4];
+            Arrays.fill(sign, Component.text());
         }
 
-        sign[line - 1] = colorPermission ? translateChatColors(text) : text;
-
+        sign[line - 1] = colorPermission ? serializer.deserialize(text) : Component.text(text);
 
         signs.put(player, sign);
-
         player.sendMessage(messages.get("sign_edited"));
         return true;
     }
@@ -135,16 +131,20 @@ public class SignCommand implements CommandExecutor, Listener {
 
         Sign sign = ((Sign) event.getBlock().getState());
 
-        String[] lines = signs.get(player);
-        if (lines == null) lines = new String[]{"", "", "", ""};
+        Component[] lines = signs.get(player);
+        if (lines == null) {
+            lines = new Component[4];
+            Arrays.fill(lines, Component.text());
+        }
+
 
 
         sign.setEditable(false);
-        SignChangeEvent signEvent = new SignChangeEvent(event.getBlock(), player, lines);
+        SignChangeEvent signEvent = new SignChangeEvent(event.getBlock(), player, Arrays.asList(lines));
         Bukkit.getServer().getPluginManager().callEvent(signEvent);
         if (signEvent.isCancelled()) return;
         for (int i = 0; i < lines.length; i++) {
-            sign.setLine(i, lines[i]);
+            sign.line(i, lines[i]);
         }
         sign.update();
     }
@@ -154,24 +154,13 @@ public class SignCommand implements CommandExecutor, Listener {
         if (event.getAction() != Action.LEFT_CLICK_BLOCK) return;
         if (!enabledPlayers.contains(event.getPlayer())) return;
         if (!(Objects.requireNonNull(event.getClickedBlock()).getState() instanceof Sign)) return;
-        signs.put(event.getPlayer(), ((Sign) Objects.requireNonNull(event.getClickedBlock()).getState()).getLines());
+        signs.put(event.getPlayer(), ((Sign) Objects.requireNonNull(event.getClickedBlock()).getState()).lines().toArray(new Component[0]));
     }
 
     @EventHandler
     void onPlayerQuit(PlayerQuitEvent event) {
         enabledPlayers.remove(event.getPlayer());
         signs.remove(event.getPlayer());
-    }
-
-
-    private String translateChatColors(String text) {
-        Matcher matcher = hexColorPattern.matcher(text);
-        while (matcher.find()) {
-            String color = text.substring(matcher.start(), matcher.end());
-            text = text.replace(color, ChatColor.of("#" + color.substring(2)).toString());
-            matcher = hexColorPattern.matcher(text);
-        }
-        return ChatColor.translateAlternateColorCodes('&', text);
     }
 
     private void onEnable(Player player) {
