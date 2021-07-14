@@ -2,5 +2,4 @@ sign_enable: §bEnabled sign editor
 sign_disable: §bDisabled sign editor
 line_not_number: §4The line has to be a number.
 line_out_of_bounds: §4The line has to be between 1 and 4.
-text_too_long: §4A sign can only hold 15 characters!
 sign_edited: §aSign was edited.

@@ -31,11 +31,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class SignCommand implements CommandExecutor, Listener {
     private static final LegacyComponentSerializer serializer = LegacyComponentSerializer.legacyAmpersand();
-    private static final Pattern removePattern = Pattern.compile("(&[0-9a-fk-rA-FK-R])|(&#[0-9a-fA-F]{6})");
 
     private final Set<Player> enabledPlayers = new HashSet<>();
     private final HashMap<String, String> messages = new HashMap<>();
@@ -100,16 +98,10 @@ public class SignCommand implements CommandExecutor, Listener {
 
         String text = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
-        String removedColorCodes = colorPermission ? removePattern.matcher(text).replaceAll("") : text;
-        if (removedColorCodes.length() > 15) {
-            player.sendMessage(messages.get("text_too_long"));
-            return true;
-        }
-
         Component[] sign = signs.get(player);
         if (sign == null) {
             sign = new Component[4];
-            Arrays.fill(sign, Component.text());
+            Arrays.fill(sign, Component.text(""));
         }
 
         sign[line - 1] = colorPermission ? serializer.deserialize(text) : Component.text(text);
@@ -138,13 +130,13 @@ public class SignCommand implements CommandExecutor, Listener {
         }
 
 
-
         sign.setEditable(false);
         SignChangeEvent signEvent = new SignChangeEvent(event.getBlock(), player, Arrays.asList(lines));
         Bukkit.getServer().getPluginManager().callEvent(signEvent);
         if (signEvent.isCancelled()) return;
-        for (int i = 0; i < lines.length; i++) {
-            sign.line(i, lines[i]);
+        List<Component> l = signEvent.lines();
+        for (int i = 0; i < l.size(); i++) {
+            sign.line(i, l.get(i));
         }
         sign.update();
     }
