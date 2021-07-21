@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
@@ -16,6 +17,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,8 +33,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Function;
 
-public class SignCommand implements CommandExecutor, Listener {
+public class SignCommand implements CommandExecutor, TabCompleter, Listener {
     private static final LegacyComponentSerializer serializer = LegacyComponentSerializer.legacyAmpersand();
 
     private final Set<Player> enabledPlayers = new HashSet<>();
@@ -58,8 +61,36 @@ public class SignCommand implements CommandExecutor, Listener {
         }
     }
 
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (!(sender instanceof Player player)) return null;
+        if (!enabledPlayers.contains(sender)) return List.of();
+        if (!sender.hasPermission("signedit.sign.command")) return List.of();
 
-    @Override
+        if (args.length == 1) return List.of("1", "2", "3", "4");
+
+        if (!signs.containsKey(player)) return List.of();
+
+        Component[] sign = signs.get(player);
+        final Function<Integer, List<String>> f = i -> {
+            if (sign[i] instanceof TextComponent tc)
+                return List.of(serializer.serialize(tc).replace('§', '&'));
+            return null;
+        };
+
+        if (args.length == 2) {
+            List<String> l = List.of();
+            String line = args[0];
+            switch (line) {
+                case "1" -> l = f.apply(0);
+                case "2" -> l = f.apply(1);
+                case "3" -> l = f.apply(2);
+                case "4" -> l = f.apply(3);
+            }
+            return l;
+        }
+        return List.of();
+    }
+
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(ChatColor.RED + "This command can only be executed by players!");
