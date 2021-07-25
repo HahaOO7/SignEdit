@@ -6,7 +6,7 @@
 
     <groupId>at.haha</groupId>
     <artifactId>SignEdit</artifactId>
-    <version>1.0</version>
+    <version>v1.0</version>
     <packaging>jar</packaging>
 
     <name>SignEdit</name>
@@ -15,7 +15,7 @@
     <properties>
         <java.version>16</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mcVersion>1.17-R0.1-SNAPSHOT</mcVersion>
+        <mcVersion>1.17.1-R0.1-SNAPSHOT</mcVersion>
     </properties>
 
     <repositories>
@@ -37,8 +37,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper</artifactId>
             <version>${mcVersion}</version>
             <scope>provided</scope>
         </dependency>
